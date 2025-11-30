@@ -1,0 +1,10 @@
+/home/michael/Desktop/trust-grid/icp-nft/target/release/deps/ar_archive_writer-7a049f34c35593a8.d: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs
+
+/home/michael/Desktop/trust-grid/icp-nft/target/release/deps/libar_archive_writer-7a049f34c35593a8.rlib: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs
+
+/home/michael/Desktop/trust-grid/icp-nft/target/release/deps/libar_archive_writer-7a049f34c35593a8.rmeta: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs
+
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs:

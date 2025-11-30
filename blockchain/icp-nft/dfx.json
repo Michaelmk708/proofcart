@@ -1,0 +1,17 @@
+{
+  "canisters": {
+    "proofcart_nft": {
+      "candid": "src/proofcart_nft.did",
+      "package": "proofcart-nft",
+      "type": "rust"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

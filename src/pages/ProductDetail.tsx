@@ -1,37 +1,109 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Star, Shield, Package, Truck, RotateCcw, ExternalLink, Minus, Plus } from "lucide-react";
+import { Star, Shield, Package, Truck, RotateCcw, ExternalLink, Minus, Plus, QrCode } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { apiService } from "@/lib/api";
+import { toast } from "sonner";
+import type { Product } from "@/types";
+import { envConfig } from "@/lib/envConfig";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
-
-  // Mock product data
-  const product = {
-    id: id || "1",
-    name: "Premium Wireless Headphones - Studio Quality Sound",
-    price: 299.99,
-    images: [
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop",
-      "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800&h=800&fit=crop",
-    ],
-    rating: 4.8,
-    reviews: 1234,
-    verified: true,
-    manufacturer: "AudioTech Pro",
-    nftId: "ICP-NFT-7892A3F",
-    mintDate: "2024-01-15",
-    description: "Experience unparalleled audio quality with our Premium Wireless Headphones. Featuring advanced noise cancellation, 40-hour battery life, and studio-grade sound quality verified through blockchain authentication.",
-  };
-
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentImage, setCurrentImage] = useState(0);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!id) {
+        navigate('/marketplace');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const productData = await apiService.getProduct(id);
+        setProduct(productData);
+        
+        // Generate QR code URL using backend
+        // Handle both snake_case and camelCase
+        const serialNum = (productData as any).serial_number || productData.serialNumber;
+        console.log('🔖 Product serial number for QR:', serialNum);
+        console.log('📦 Full product data:', productData);
+        
+        if (!serialNum) {
+          console.error('❌ No serial number found in product data!');
+          toast.error('Product serial number missing');
+          return;
+        }
+        
+        const verificationUrl = `${envConfig.baseUrl}/verify/${serialNum}`;
+        console.log('🔗 Generated verification URL:', verificationUrl);
+        
+        setQrCodeUrl(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(verificationUrl)}`);
+      } catch (error) {
+        console.error('Error fetching product:', error);
+        toast.error('Failed to load product');
+        navigate('/marketplace');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id, navigate]);
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading product...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  if (!product) {
+    return (
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-xl text-muted-foreground">Product not found</p>
+            <Button onClick={() => navigate('/marketplace')} className="mt-4">
+              Back to Marketplace
+            </Button>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const handleAddToCart = () => {
+    if (!product) {
+      toast.error('Product not loaded');
+      return;
+    }
+    
+    addToCart(product as any, quantity);
+    toast.success(`Added ${quantity} ${quantity > 1 ? 'items' : 'item'} to cart`);
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -97,7 +169,7 @@ const ProductDetail = () => {
 
             <div className="flex items-baseline gap-4">
               <span className="text-4xl font-bold text-primary">
-                ${product.price.toFixed(2)}
+                KSh {typeof product.price === 'number' ? product.price.toLocaleString() : parseFloat(product.price).toLocaleString()}
               </span>
             </div>
 
@@ -144,10 +216,12 @@ const ProductDetail = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <Button className="flex-1" size="lg">
-                Buy via Escrow
-              </Button>
-              <Button variant="outline" size="lg">
+              <Button 
+                className="flex-1" 
+                size="lg"
+                onClick={handleAddToCart}
+                disabled={!product}
+              >
                 Add to Cart
               </Button>
             </div>
@@ -175,14 +249,125 @@ const ProductDetail = () => {
           <Tabs defaultValue="description" className="w-full">
             <TabsList className="w-full justify-start">
               <TabsTrigger value="description">Description</TabsTrigger>
+              <TabsTrigger value="verification">Verification & QR</TabsTrigger>
               <TabsTrigger value="provenance">Provenance</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
             <TabsContent value="description" className="mt-6">
               <div className="prose max-w-none">
-                <p className="text-muted-foreground leading-relaxed">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
                   {product.description}
                 </p>
+              </div>
+            </TabsContent>
+            <TabsContent value="verification" className="mt-6">
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* QR Code Section */}
+                <div className="bg-gradient-to-br from-secondary/5 to-secondary/10 rounded-lg p-8 flex flex-col items-center justify-center">
+                  <div className="bg-white p-6 rounded-lg shadow-lg mb-4">
+                    {qrCodeUrl ? (
+                      <img
+                        src={qrCodeUrl}
+                        alt="Product Verification QR Code"
+                        className="w-64 h-64"
+                      />
+                    ) : (
+                      <div className="w-64 h-64 flex items-center justify-center bg-gray-100 rounded">
+                        <p className="text-sm text-gray-500">Loading QR code...</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center gap-2 justify-center mb-2">
+                      <QrCode className="h-5 w-5 text-secondary" />
+                      <h3 className="font-semibold text-lg">Scan to Verify</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground max-w-sm mb-3">
+                      Scan this QR code with your phone to verify product authenticity on the blockchain
+                    </p>
+                    <div className="flex gap-2 justify-center">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const serialNum = (product as any).serial_number || product.serialNumber;
+                          navigator.clipboard.writeText(`${envConfig.baseUrl}/verify/${serialNum}`);
+                          toast.success('Verification link copied!');
+                        }}
+                      >
+                        Copy Link
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          const serialNum = (product as any).serial_number || product.serialNumber;
+                          window.open(`/verify/${serialNum}`, '_blank');
+                        }}
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Test Verification
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Verification Details */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-semibold text-xl mb-4">Blockchain Certificate</h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start pb-3 border-b">
+                        <span className="text-sm font-medium text-muted-foreground">Serial Number</span>
+                        <span className="text-sm font-mono font-semibold">{product.serialNumber}</span>
+                      </div>
+                      <div className="flex justify-between items-start pb-3 border-b">
+                        <span className="text-sm font-medium text-muted-foreground">NFT ID</span>
+                        <span className="text-sm font-mono font-semibold">{product.nftId || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between items-start pb-3 border-b">
+                        <span className="text-sm font-medium text-muted-foreground">Manufacturer</span>
+                        <span className="text-sm font-semibold">{product.manufacturer}</span>
+                      </div>
+                      <div className="flex justify-between items-start pb-3 border-b">
+                        <span className="text-sm font-medium text-muted-foreground">Blockchain</span>
+                        <span className="text-sm font-semibold">Internet Computer (ICP)</span>
+                      </div>
+                      <div className="flex justify-between items-start pb-3 border-b">
+                        <span className="text-sm font-medium text-muted-foreground">Verification Status</span>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          <Shield className="h-3 w-3 mr-1" />
+                          Verified Authentic
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-start pb-3 border-b">
+                        <span className="text-sm font-medium text-muted-foreground">Metadata URI</span>
+                        <a 
+                          href={product.metadataUri || (product as any).nft_metadata_uri || '#'} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-secondary hover:underline flex items-center gap-1"
+                        >
+                          View on IPFS
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4">
+                    <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-blue-600" />
+                      What This Means
+                    </h4>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>✓ Guaranteed authentic product from {product.manufacturer}</li>
+                      <li>✓ Permanent blockchain record of ownership</li>
+                      <li>✓ Verifiable warranty and purchase history</li>
+                      <li>✓ Can be transferred to new owner when resold</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </TabsContent>
             <TabsContent value="provenance" className="mt-6">

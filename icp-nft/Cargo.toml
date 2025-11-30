@@ -1,0 +1,7 @@
+[workspace]
+members = ["src/nft_canister"]
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1

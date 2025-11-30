@@ -1,9 +1,22 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Shield, User } from "lucide-react";
+import { ShoppingCart, Search, Shield, User, LogOut, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 
 const Header = () => {
+  const { user, isAuthenticated, logout, connectWallet } = useAuth();
+  const { itemCount } = useCart();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center gap-4 px-4">
@@ -35,14 +48,60 @@ const Header = () => {
               Verify Product
             </Link>
           </Button>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="relative">
-            <ShoppingCart className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
-              0
-            </span>
+          
+          {isAuthenticated ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>
+                  {user?.username}
+                  {user?.role && (
+                    <span className="block text-xs text-muted-foreground capitalize">
+                      {user.role}
+                    </span>
+                  )}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">My Dashboard</Link>
+                </DropdownMenuItem>
+                {user?.role === 'seller' && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/seller/dashboard">Seller Dashboard</Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={connectWallet}>
+                  Connect Wallet
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button variant="ghost" asChild>
+              <Link to="/login">
+                <User className="h-5 w-5 mr-2" />
+                Login
+              </Link>
+            </Button>
+          )}
+          
+          <Button variant="ghost" size="icon" className="relative" asChild>
+            <Link to="/cart">
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-600 text-white text-xs font-bold flex items-center justify-center">
+                  {itemCount > 9 ? '9+' : itemCount}
+                </span>
+              )}
+            </Link>
           </Button>
         </nav>
       </div>

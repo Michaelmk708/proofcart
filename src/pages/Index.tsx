@@ -1,51 +1,43 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Shield, Lock, Zap, ArrowRight } from "lucide-react";
+import { apiService } from "@/lib/api";
+import { toast } from "sonner";
+import type { Product } from "@/types";
 
 const Index = () => {
-  const featuredProducts = [
-    {
-      id: "1",
-      name: "Premium Wireless Headphones - Studio Quality Sound",
-      price: 299.99,
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-      rating: 4.8,
-      reviews: 1234,
-      verified: true,
-      trending: true,
-    },
-    {
-      id: "2",
-      name: "Smart Watch Series 7 - Health & Fitness Tracker",
-      price: 399.99,
-      image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
-      rating: 4.6,
-      reviews: 892,
-      verified: true,
-    },
-    {
-      id: "3",
-      name: "Designer Leather Handbag - Genuine Italian Leather",
-      price: 549.99,
-      image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&h=500&fit=crop",
-      rating: 4.9,
-      reviews: 567,
-      verified: true,
-      trending: true,
-    },
-    {
-      id: "4",
-      name: "4K Ultra HD Camera - Professional Photography",
-      price: 1299.99,
-      image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&h=500&fit=crop",
-      rating: 4.7,
-      reviews: 432,
-      verified: true,
-    },
-  ];
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  useEffect(() => {
+    // Delay loading products to prioritize initial page render
+    const timer = setTimeout(() => {
+      if (!hasLoaded) {
+        fetchFeaturedProducts();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [hasLoaded]);
+
+  const fetchFeaturedProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await apiService.getProducts({ verified: true });
+      setFeaturedProducts(response.results.slice(0, 4));
+      setHasLoaded(true);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      // Don't show error toast on home page to avoid disruption
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen">
@@ -153,9 +145,25 @@ const Index = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-muted rounded-lg h-64"></div>
+                </div>
+              ))
+            ) : featuredProducts.length > 0 ? (
+              featuredProducts.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  {...product} 
+                  image={product.images?.[0] || '/placeholder.svg'}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No products available yet</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

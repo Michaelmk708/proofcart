@@ -1,0 +1,45 @@
+type TransferRecord = record {
+    from: principal;
+    to: principal;
+    timestamp: nat64;
+};
+
+type NFT = record {
+    id: nat64;
+    serial_number: text;
+    product_name: text;
+    manufacturer: text;
+    metadata_uri: text;
+    owner: principal;
+    minted_at: nat64;
+    transfer_history: vec TransferRecord;
+};
+
+type MintRequest = record {
+    serial_number: text;
+    product_name: text;
+    manufacturer: text;
+    metadata_uri: text;
+};
+
+type Result = variant {
+    Ok: nat64;
+    Err: text;
+};
+
+type TransferResult = variant {
+    Ok: bool;
+    Err: text;
+};
+
+service : {
+    mint_nft: (MintRequest) -> (Result);
+    verify_nft: (text) -> (opt NFT) query;
+    get_nft: (nat64) -> (opt NFT) query;
+    transfer_nft: (nat64, principal) -> (TransferResult);
+    get_owner_nfts: (principal) -> (vec NFT) query;
+    get_transfer_history: (nat64) -> (opt vec TransferRecord) query;
+    nft_exists: (text) -> (bool) query;
+    get_total_nfts: () -> (nat64) query;
+    batch_verify_nfts: (vec text) -> (vec record { text; opt NFT }) query;
+}

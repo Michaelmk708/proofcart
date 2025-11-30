@@ -3,16 +3,20 @@ import { Star, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import VerifiedBadge from "./VerifiedBadge";
+import { useCart } from "@/contexts/CartContext";
+import type { Product } from "@/types";
 
 interface ProductCardProps {
   id: string;
   name: string;
-  price: number;
+  price: number | string;
   image: string;
   rating: number;
   reviews: number;
   verified: boolean;
   trending?: boolean;
+  // Accept full product data for cart
+  [key: string]: any;
 }
 
 const ProductCard = ({
@@ -24,7 +28,30 @@ const ProductCard = ({
   reviews,
   verified,
   trending,
+  ...restProps
 }: ProductCardProps) => {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent navigation to product detail
+    e.stopPropagation();
+    
+    // Construct product object from props
+    const product: Product = {
+      id,
+      name,
+      price: typeof price === 'number' ? price : parseFloat(price),
+      images: [image],
+      rating,
+      reviews,
+      verified,
+      ...restProps
+    } as Product;
+    
+    console.log('🛒 ProductCard - Adding to cart:', product);
+    addToCart(product, 1);
+  };
+
   return (
     <Card className="group overflow-hidden transition-all hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1">
       <Link to={`/product/${id}`}>
@@ -69,13 +96,17 @@ const ProductCard = ({
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-primary">
-              ${price.toFixed(2)}
+              KSh {typeof price === 'number' ? price.toLocaleString() : parseFloat(price).toLocaleString()}
             </span>
           </div>
         </CardContent>
       </Link>
       <CardFooter className="p-4 pt-0">
-        <Button className="w-full" size="sm">
+        <Button 
+          className="w-full" 
+          size="sm"
+          onClick={handleAddToCart}
+        >
           Add to Cart
         </Button>
       </CardFooter>

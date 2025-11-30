@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -7,70 +7,48 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { SlidersHorizontal } from "lucide-react";
-
-// Mock product data
-const products = [
-  {
-    id: "1",
-    name: "Premium Wireless Headphones - Studio Quality Sound",
-    price: 299.99,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-    rating: 4.8,
-    reviews: 1234,
-    verified: true,
-    trending: true,
-  },
-  {
-    id: "2",
-    name: "Smart Watch Series 7 - Health & Fitness Tracker",
-    price: 399.99,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
-    rating: 4.6,
-    reviews: 892,
-    verified: true,
-  },
-  {
-    id: "3",
-    name: "Designer Leather Handbag - Genuine Italian Leather",
-    price: 549.99,
-    image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&h=500&fit=crop",
-    rating: 4.9,
-    reviews: 567,
-    verified: true,
-    trending: true,
-  },
-  {
-    id: "4",
-    name: "4K Ultra HD Camera - Professional Photography",
-    price: 1299.99,
-    image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=500&h=500&fit=crop",
-    rating: 4.7,
-    reviews: 432,
-    verified: true,
-  },
-  {
-    id: "5",
-    name: "Luxury Chronograph Watch - Swiss Movement",
-    price: 899.99,
-    image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=500&h=500&fit=crop",
-    rating: 4.9,
-    reviews: 678,
-    verified: true,
-  },
-  {
-    id: "6",
-    name: "Premium Running Shoes - Advanced Cushioning",
-    price: 179.99,
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop",
-    rating: 4.5,
-    reviews: 923,
-    verified: true,
-  },
-];
+import { apiService } from "@/lib/api";
+import { toast } from "sonner";
+import type { Product } from "@/types";
 
 const Marketplace = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [priceRange, setPriceRange] = useState([0, 2000]);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const response = await apiService.getProducts();
+        setProducts(response.results);
+        setFilteredProducts(response.results);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        toast.error('Failed to load products');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    let filtered = products;
+
+    if (verifiedOnly) {
+      filtered = filtered.filter(p => p.verified);
+    }
+
+    filtered = filtered.filter(
+      p => p.price >= priceRange[0] && p.price <= priceRange[1]
+    );
+
+    setFilteredProducts(filtered);
+  }, [products, verifiedOnly, priceRange]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -148,10 +126,26 @@ const Marketplace = () => {
                 </h1>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {products.map((product) => (
-                  <ProductCard key={product.id} {...product} />
-                ))}
+                            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="bg-muted rounded-lg h-64"></div>
+                    </div>
+                  ))
+                ) : filteredProducts.length > 0 ? (
+                  filteredProducts.map((product) => (
+                    <ProductCard 
+                      key={product.id} 
+                      {...product} 
+                      image={product.images?.[0] || '/placeholder.svg'}
+                    />
+                  ))
+                ) : (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-muted-foreground">No products match your filters</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

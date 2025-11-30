@@ -1,0 +1,14 @@
+/home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/deps/serde-5af10651a57a2642.d: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/build/serde-9673df2946c1c92b/out/private.rs
+
+/home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/deps/libserde-5af10651a57a2642.rlib: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/build/serde-9673df2946c1c92b/out/private.rs
+
+/home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/deps/libserde-5af10651a57a2642.rmeta: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/build/serde-9673df2946c1c92b/out/private.rs
+
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/build/serde-9673df2946c1c92b/out/private.rs:
+
+# env-dep:OUT_DIR=/home/michael/Desktop/trust-grid/solana-escrow/programs/escrow/target/debug/build/serde-9673df2946c1c92b/out

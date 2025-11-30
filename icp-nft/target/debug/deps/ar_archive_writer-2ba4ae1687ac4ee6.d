@@ -1,0 +1,10 @@
+/mnt/vboxdata/trust-grid/icp-nft/target/debug/deps/ar_archive_writer-2ba4ae1687ac4ee6.d: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs
+
+/mnt/vboxdata/trust-grid/icp-nft/target/debug/deps/libar_archive_writer-2ba4ae1687ac4ee6.rlib: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs
+
+/mnt/vboxdata/trust-grid/icp-nft/target/debug/deps/libar_archive_writer-2ba4ae1687ac4ee6.rmeta: /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs /home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs
+
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/lib.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/alignment.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive.rs:
+/home/michael/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ar_archive_writer-0.2.0/src/archive_writer.rs:

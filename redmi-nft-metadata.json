@@ -1,0 +1,77 @@
+{
+  "name": "Redmi Note 14 Pro - Authentic Device Certificate",
+  "description": "Official ProofCart NFT Certificate of Authenticity for Redmi Note 14 Pro. This NFT serves as blockchain-verified proof of authenticity and ownership.",
+  "image": "ipfs://bafybeiredmi14pro",
+  "attributes": [
+    {
+      "trait_type": "Product Type",
+      "value": "Smartphone"
+    },
+    {
+      "trait_type": "Brand",
+      "value": "Xiaomi"
+    },
+    {
+      "trait_type": "Model",
+      "value": "Redmi Note 14 Pro"
+    },
+    {
+      "trait_type": "Model Number",
+      "value": "2312DRAABG"
+    },
+    {
+      "trait_type": "Serial/IMEI",
+      "value": "8645REDMI14PRO"
+    },
+    {
+      "trait_type": "Manufacturer",
+      "value": "Xiaomi Corporation"
+    },
+    {
+      "trait_type": "Original Owner",
+      "value": "Michael Kinuthia"
+    },
+    {
+      "trait_type": "Purchase Type",
+      "value": "Brand New"
+    },
+    {
+      "trait_type": "Condition",
+      "value": "New - First Ownership"
+    },
+    {
+      "trait_type": "Verification Status",
+      "value": "Blockchain Verified"
+    },
+    {
+      "trait_type": "Blockchain",
+      "value": "Internet Computer Protocol (ICP)"
+    },
+    {
+      "trait_type": "NFT Standard",
+      "value": "ProofCart Authenticity Certificate"
+    },
+    {
+      "trait_type": "Minted Date",
+      "value": "2025-11-06"
+    },
+    {
+      "trait_type": "Canister ID",
+      "value": "uxrrr-q7777-77774-qaaaq-cai"
+    },
+    {
+      "trait_type": "NFT ID",
+      "value": "2"
+    }
+  ],
+  "properties": {
+    "category": "Electronics",
+    "subcategory": "Smartphones",
+    "verified": true,
+    "authenticity_score": 100,
+    "provenance_tracked": true,
+    "resale_eligible": true
+  },
+  "external_url": "https://proofcart.netlify.app/verify/8645REDMI14PRO",
+  "animation_url": null
+}
