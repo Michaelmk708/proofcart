@@ -23,7 +23,7 @@ class NFT(models.Model):
     # Blockchain data
     metadata_uri = models.URLField()
     icp_transaction_hash = models.CharField(max_length=255)
-    current_owner = models.CharField(max_length=255, blank=True, null=True)
+    current_owner = models.ForeignKey(settings.AUTH_USER_MODEL,on_path=models.SET_NULL,null=True,blank=True,related_name='owned_nfts')
     
     # Verification
     verified = models.BooleanField(default=True)
