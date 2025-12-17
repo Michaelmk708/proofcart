@@ -52,7 +52,7 @@ class NFT(models.Model):
     def add_ownership_record(self, new_owner, transaction_hash):
         """Add a new ownership record to history"""
         self.ownership_history.append({
-            'owner': new_owner,
+            'owner_id': new_owner.id,
             'transaction_hash': transaction_hash,
             'timestamp': str(self.updated_at)
         })
