@@ -78,7 +78,7 @@ interface ProvenanceData {
 }
 
 const ProvenanceDashboard: React.FC = () => {
-  const { serialNumber } = useParams<{ serialNumber: string }>();
+  const { serial: serialNumber } = useParams<{ serial?: string }>();
   const navigate = useNavigate();
   
   const [provenance, setProvenance] = useState<ProvenanceData | null>(null);
@@ -86,21 +86,46 @@ const ProvenanceDashboard: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (serialNumber) {
-      fetchProvenance();
-    }
+    if (!serialNumber) return;
+
+    const load = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const data = await apiService.getProductProvenance(serialNumber);
+        setProvenance(data as ProvenanceData);
+      } catch (err) {
+        console.error('Provenance fetch error:', err);
+        let msg = 'Failed to load product provenance';
+        if (typeof err === 'object' && err !== null) {
+          const e = err as { response?: { data?: { error?: string } } };
+          msg = e.response?.data?.error || msg;
+        }
+        setError(msg);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [serialNumber]);
 
   const fetchProvenance = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await apiService.getProductProvenance(serialNumber!);
-      setProvenance(data);
-    } catch (err: any) {
+      setProvenance(data as ProvenanceData);
+    } catch (err) {
       console.error('Provenance fetch error:', err);
-      setError(err.response?.data?.error || 'Failed to load product provenance');
+      let msg = 'Failed to load product provenance';
+      if (typeof err === 'object' && err !== null) {
+        const e = err as { response?: { data?: { error?: string } } };
+        msg = e.response?.data?.error || msg;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

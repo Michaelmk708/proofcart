@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Search, Shield, User, LogOut, Settings } from "lucide-react";
+import { ShoppingCart, Search, Shield, User, LogOut, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -48,6 +48,12 @@ const Header = () => {
               Verify Product
             </Link>
           </Button>
+            <Button variant="ghost" asChild className="hidden md:flex">
+            <Link to="/scan">
+              <QrCode className="h-4 w-4 mr-2" />
+              Scan
+            </Link>
+          </Button>
           
           {isAuthenticated ? (
             <DropdownMenu>
@@ -68,6 +74,9 @@ const Header = () => {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to="/dashboard">My Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/orders">Orders</Link>
                 </DropdownMenuItem>
                 {user?.role === 'seller' && (
                   <DropdownMenuItem asChild>

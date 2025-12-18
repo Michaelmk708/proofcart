@@ -1,9 +1,10 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Star, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import VerifiedBadge from "./VerifiedBadge";
 import { useCart } from "@/contexts/CartContext";
+import { useAppState } from '@/contexts/AppStateContext';
 import type { Product } from "@/types";
 
 interface ProductCardProps {
@@ -16,7 +17,7 @@ interface ProductCardProps {
   verified: boolean;
   trending?: boolean;
   // Accept full product data for cart
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 const ProductCard = ({
@@ -31,6 +32,19 @@ const ProductCard = ({
   ...restProps
 }: ProductCardProps) => {
   const { addToCart } = useCart();
+  const rest = restProps as Record<string, unknown>;
+  const serial = (typeof rest.serial_number === 'string' && rest.serial_number) || (typeof rest.serialNumber === 'string' && rest.serialNumber) || '';
+  const { state } = useAppState();
+  const nftVerification = state.nftVerification[serial];
+  const navigate = useNavigate();
+
+  const handleVerify = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const serial = (rest.serial_number as string) || (rest.serialNumber as string);
+    if (serial) navigate(`/verify/${encodeURIComponent(serial)}`);
+    else window.alert('No serial number found for this product');
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent navigation to product detail
@@ -101,7 +115,7 @@ const ProductCard = ({
           </div>
         </CardContent>
       </Link>
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 flex gap-2">
         <Button 
           className="w-full" 
           size="sm"
@@ -109,6 +123,7 @@ const ProductCard = ({
         >
           Add to Cart
         </Button>
+        <Button variant="outline" size="sm" onClick={handleVerify}>Verify</Button>
       </CardFooter>
     </Card>
   );

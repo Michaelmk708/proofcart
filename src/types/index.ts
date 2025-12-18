@@ -58,6 +58,11 @@ export interface Order {
   escrowId?: string;
   escrowStatus?: 'created' | 'locked' | 'released' | 'refunded';
   transactionHash?: string;
+  serialNumber?: string;
+  verificationSerial?: string;
+  reviewed?: boolean;
+  sellerEmail?: string;
+  sellerPhone?: string;
   shippingAddress: string;
   trackingNumber?: string;
   createdAt: string;

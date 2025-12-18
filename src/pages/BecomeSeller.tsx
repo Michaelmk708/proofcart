@@ -56,9 +56,14 @@ const BecomeSeller = () => {
       setTimeout(() => {
         window.location.href = '/seller/dashboard';
       }, 1000);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error upgrading to seller:', error);
-      toast.error(error.response?.data?.message || 'Failed to upgrade account');
+      let msg = 'Failed to upgrade account';
+      if (typeof error === 'object' && error !== null) {
+        const e = error as { response?: { data?: { message?: string } }; message?: string };
+        msg = e.response?.data?.message || e.message || msg;
+      }
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

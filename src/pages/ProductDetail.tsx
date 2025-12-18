@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import SellerTrustBadge from '@/components/SellerTrustBadge';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,10 +35,11 @@ const ProductDetail = () => {
         setIsLoading(true);
         const productData = await apiService.getProduct(id);
         setProduct(productData);
-        
+
         // Generate QR code URL using backend
         // Handle both snake_case and camelCase
-        const serialNum = (productData as any).serial_number || productData.serialNumber;
+        const pd = productData as unknown as Record<string, unknown>;
+        const serialNum = (typeof pd['serial_number'] === 'string' && pd['serial_number'] as string) || productData.serialNumber;
         console.log('🔖 Product serial number for QR:', serialNum);
         console.log('📦 Full product data:', productData);
         
@@ -101,7 +103,7 @@ const ProductDetail = () => {
       return;
     }
     
-    addToCart(product as any, quantity);
+    addToCart(product, quantity);
     toast.success(`Added ${quantity} ${quantity > 1 ? 'items' : 'item'} to cart`);
   };
 
@@ -164,6 +166,11 @@ const ProductDetail = () => {
                     {product.rating} ({product.reviews} reviews)
                   </span>
                 </div>
+                {product.sellerId && (
+                  <div className="ml-auto">
+                    <SellerTrustBadge sellerId={product.sellerId} size="sm" />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -286,11 +293,12 @@ const ProductDetail = () => {
                       Scan this QR code with your phone to verify product authenticity on the blockchain
                     </p>
                     <div className="flex gap-2 justify-center">
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
-                          const serialNum = (product as any).serial_number || product.serialNumber;
+                          const pd = product as unknown as Record<string, unknown>;
+                          const serialNum = (typeof pd['serial_number'] === 'string' && pd['serial_number'] as string) || product.serialNumber;
                           navigator.clipboard.writeText(`${envConfig.baseUrl}/verify/${serialNum}`);
                           toast.success('Verification link copied!');
                         }}
@@ -301,7 +309,8 @@ const ProductDetail = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => {
-                          const serialNum = (product as any).serial_number || product.serialNumber;
+                          const pd = product as unknown as Record<string, unknown>;
+                          const serialNum = (typeof pd['serial_number'] === 'string' && pd['serial_number'] as string) || product.serialNumber;
                           window.open(`/verify/${serialNum}`, '_blank');
                         }}
                       >
@@ -342,8 +351,8 @@ const ProductDetail = () => {
                       </div>
                       <div className="flex justify-between items-start pb-3 border-b">
                         <span className="text-sm font-medium text-muted-foreground">Metadata URI</span>
-                        <a 
-                          href={product.metadataUri || (product as any).nft_metadata_uri || '#'} 
+                        <a
+                          href={product.metadataUri || (product as unknown as Record<string, unknown>)['nft_metadata_uri'] as string || '#'}
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="text-sm text-secondary hover:underline flex items-center gap-1"
