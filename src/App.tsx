@@ -1,10 +1,12 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Notifications from "@/components/Notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
+import { AppStateProvider } from "@/contexts/AppStateContext";
 import { lazy, Suspense } from "react";
 
 // Eager load critical pages
@@ -20,6 +22,8 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SellerDashboard = lazy(() => import("./pages/SellerDashboard"));
+const Scan = lazy(() => import("./pages/Scan"));
+const Orders = lazy(() => import("./pages/Orders"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -40,9 +44,11 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+        <Notifications />
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <AuthProvider>
           <CartProvider>
+            <AppStateProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -56,12 +62,15 @@ const App = () => (
                 <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/seller/dashboard" element={<SellerDashboard />} />
+                <Route path="/orders" element={<Orders />} />
+                <Route path="/scan" element={<Scan />} />
                 <Route path="/become-seller" element={<BecomeSeller />} />
                 <Route path="/seller" element={<BecomeSeller />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </AppStateProvider>
           </CartProvider>
         </AuthProvider>
       </BrowserRouter>

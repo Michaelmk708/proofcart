@@ -41,16 +41,17 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     console.log('🛒 addToCart called with:', { product, quantity });
     
     // Check if product is verified - handle both snake_case and camelCase
-    const verified = (product as any).verified;
-    const nftId = (product as any).nft_id || product.nftId;
-    const isVerified = verified || nftId;
-    
-    console.log('✅ Product verification status:', { 
-      isVerified, 
-      verified, 
+    const verified = product.verified;
+    const asRecord = product as unknown as Record<string, unknown>;
+    const nftId = (asRecord['nft_id'] as string | undefined) || product.nftId;
+    const isVerified = Boolean(verified || nftId);
+
+    console.log('✅ Product verification status:', {
+      isVerified,
+      verified,
       nftId,
-      nft_id: (product as any).nft_id,
-      productKeys: Object.keys(product).slice(0, 15)
+      nft_id: asRecord['nft_id'],
+      productKeys: Object.keys(product).slice(0, 15),
     });
     
     if (!isVerified) {

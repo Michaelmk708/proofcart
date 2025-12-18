@@ -3,7 +3,16 @@ import type { NFTMetadata } from '@/types';
 
 declare global {
   interface Window {
-    ic?: any;
+    ic?: {
+      plug?: {
+        requestConnect?: (opts: { whitelist: string[]; host?: string }) => Promise<void>;
+        isConnected?: () => boolean;
+        agent?: {
+          getPrincipal?: () => Promise<{ toString(): string }>;
+          update?: (canisterId: string, opts: { methodName?: string; args?: unknown }) => Promise<unknown>;
+        };
+      };
+    };
   }
 }
 
@@ -100,12 +109,15 @@ export class PlugWalletService {
         throw new Error('Failed to prepare mint transaction');
       }
 
-      const { canister_id, method, args } = await response.json();
+      const resJson = await response.json() as { canister_id?: string; method?: string; args?: unknown };
+      const { canister_id, method, args } = resJson;
 
       // Call the canister via Plug wallet
-      const result = await window.ic.plug.agent.update(canister_id, {
+      // Call the plug agent
+      const agent = window.ic!.plug!.agent!;
+      const result = await agent.update!(canister_id!, {
         methodName: method,
-        args: args
+        args: args,
       });
 
       // result should contain the NFT ID

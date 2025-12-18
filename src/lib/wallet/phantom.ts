@@ -3,7 +3,15 @@ import { config } from '../config';
 
 declare global {
   interface Window {
-    solana?: any;
+    solana?: {
+      isPhantom?: boolean;
+      connect?: () => Promise<{ publicKey: { toString(): string } }>;
+      disconnect?: () => Promise<void>;
+      isConnected?: boolean;
+      publicKey?: { toString(): string };
+      signTransaction?: (tx: Transaction) => Promise<Transaction>;
+      signAllTransactions?: (txs: Transaction[]) => Promise<Transaction[]>;
+    };
   }
 }
 
@@ -92,7 +100,8 @@ export class PhantomWalletService {
         throw new Error('Failed to prepare escrow transaction');
       }
 
-      const { program_id, escrow_id, instruction_data } = await response.json();
+      const json = await response.json() as { program_id?: string; escrow_id?: string; instruction_data?: string };
+      const { program_id, escrow_id, instruction_data } = json;
 
       // Build transaction with instruction from backend
       const transaction = new Transaction();
@@ -156,7 +165,8 @@ export class PhantomWalletService {
         throw new Error('Failed to prepare release transaction');
       }
 
-      const { program_id, instruction_data } = await response.json();
+      const json2 = await response.json() as { program_id?: string; instruction_data?: string };
+      const { program_id, instruction_data } = json2;
 
       // Build transaction
       const transaction = new Transaction();
@@ -216,7 +226,8 @@ export class PhantomWalletService {
         throw new Error('Failed to prepare dispute transaction');
       }
 
-      const { program_id, instruction_data } = await response.json();
+      const json3 = await response.json() as { program_id?: string; instruction_data?: string };
+      const { program_id, instruction_data } = json3;
 
       // Build transaction
       const transaction = new Transaction();
@@ -249,10 +260,10 @@ export class PhantomWalletService {
   }
 
   // Get transaction details
-  async getTransactionDetails(signature: string): Promise<any> {
+  async getTransactionDetails(signature: string): Promise<Record<string, unknown> | null> {
     try {
       const transaction = await this.connection.getTransaction(signature);
-      return transaction;
+      return transaction as Record<string, unknown> | null;
     } catch (error) {
       console.error('Error fetching transaction:', error);
       return null;

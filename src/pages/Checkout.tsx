@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
+import EscrowFlow from '@/components/EscrowFlow';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +49,9 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'mpesa' | 'crypto'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderId, setOrderId] = useState<string>('');
+  const [escrowTxHash, setEscrowTxHash] = useState<string | null>(null);
+  const [escrowId, setEscrowId] = useState<string | null>(null);
+  const [showEscrowModal, setShowEscrowModal] = useState(false);
 
   const shippingFee = 500;
   const escrowFee = totalPrice * 0.02;
@@ -125,11 +129,29 @@ const Checkout = () => {
           
           // Create escrow transaction on blockchain
           toast.info('Creating blockchain escrow...');
-          const sellerAddress = 'SELLER_WALLET_PLACEHOLDER'; // TODO: Get from seller
-          const txHash = await phantomWallet.createEscrowTransaction(
-            sellerAddress,
-            grandTotal
-          );
+          try {
+            // Try to fetch product details to find seller wallet address
+            const productDetails = await apiService.getProduct(firstItem.product.id);
+              const sellerObj = (productDetails as unknown as Record<string, unknown>)['seller'] as Record<string, unknown> | undefined;
+              const sellerAddress = sellerObj ? (String(sellerObj['wallet_address'] ?? sellerObj['walletAddress'] ?? '') ) : '';
+            if (!sellerAddress) {
+              toast.warning('Seller wallet not found — please ask seller to connect their wallet');
+            } else {
+              const txHash = await phantomWallet.createEscrowTransaction(sellerAddress, grandTotal, orderResponse.order_id!);
+              // Create escrow record in backend
+              try {
+                const escrowResp = await apiService.createEscrow({ orderId: orderResponse.order_id!, buyerAddress: walletAddress || '', sellerAddress: sellerAddress, amount: grandTotal });
+                setEscrowId(escrowResp.id || escrowResp.escrowId || null);
+              } catch (e) {
+                console.warn('Failed to persist escrow to backend', e);
+              }
+              setEscrowTxHash(txHash);
+              setShowEscrowModal(true);
+              toast.success('Blockchain escrow created: ' + txHash);
+            }
+          } catch (err) {
+            console.warn('Failed to create blockchain escrow', err);
+          }
 
           toast.success('🎉 Payment successful! Funds held in escrow.');
           setStep('success');
@@ -166,9 +188,13 @@ const Checkout = () => {
         }
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Payment error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Payment failed. Please try again.';
+      let errorMessage = 'Payment failed. Please try again.';
+      if (typeof error === 'object' && error !== null) {
+        const e = error as { response?: { data?: { error?: string } }; message?: string };
+        errorMessage = e.response?.data?.error || e.message || errorMessage;
+      }
       toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -296,7 +322,7 @@ const Checkout = () => {
                     <CardTitle>Payment Method</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <RadioGroup value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
+                    <RadioGroup value={paymentMethod} onValueChange={(value: string) => setPaymentMethod(value as 'card' | 'mpesa' | 'crypto')}>
                       {/* Card Payment */}
                       <Card className={`cursor-pointer ${paymentMethod === 'card' ? 'border-yellow-500 border-2' : ''}`}>
                         <CardContent className="p-4">

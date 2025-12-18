@@ -7,17 +7,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, Truck, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react';
+import { Package, Truck, CheckCircle2, AlertCircle, ExternalLink, Star } from 'lucide-react';
 import type { Order } from '@/types';
 import { apiService } from '@/lib/api';
 import { phantomWallet } from '@/lib/wallet/phantom';
 import { toast } from 'sonner';
+import { useCart } from '@/contexts/CartContext';
 
 const BuyerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewingOrder, setReviewingOrder] = useState<Order | null>(null);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewComment, setReviewComment] = useState<string>('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -25,16 +32,17 @@ const BuyerDashboard = () => {
       return;
     }
     fetchOrders();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
 
   const fetchOrders = async () => {
     try {
-      const data = await apiService.getOrders();
+      const data = await apiService.getMyPurchases();
       // Ensure data is an array
       setOrders(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to fetch orders:', error);
-      toast.error('Failed to load orders');
+      const message = error instanceof Error ? error.message : 'Failed to load orders';
+      toast.error(message);
       setOrders([]); // Set to empty array on error
     } finally {
       setIsLoading(false);
@@ -59,8 +67,9 @@ const BuyerDashboard = () => {
       
       toast.success('Delivery confirmed! Funds released to seller.');
       fetchOrders(); // Refresh orders
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to confirm delivery');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to confirm delivery';
+      toast.error(message);
     }
   };
 
@@ -77,8 +86,51 @@ const BuyerDashboard = () => {
       
       toast.success('Dispute filed successfully');
       fetchOrders();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to file dispute');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to file dispute';
+      toast.error(message);
+    }
+  };
+
+  const handleBuyAgain = async (order: Order) => {
+    try {
+      const product = await apiService.getProduct(order.productId);
+      if (product) {
+        addToCart(product, 1);
+        toast.success('Added item to cart');
+        navigate('/cart');
+      }
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to re-add product to cart';
+      toast.error(message);
+    }
+  };
+
+  const openReviewDialog = (order: Order) => {
+    setReviewingOrder(order);
+    setReviewRating(5);
+    setReviewComment('');
+    setReviewDialogOpen(true);
+  };
+
+  const submitReview = async () => {
+    if (!reviewingOrder) return;
+    setIsSubmittingReview(true);
+    try {
+      await apiService.submitProductReview(reviewingOrder.productId, {
+        rating: reviewRating,
+        comment: reviewComment,
+        order_id: reviewingOrder.orderId,
+      });
+      toast.success('Thank you for your review!');
+      setReviewDialogOpen(false);
+      setReviewingOrder(null);
+      fetchOrders();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to submit review';
+      toast.error(message);
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -262,6 +314,23 @@ const BuyerDashboard = () => {
                                   Confirm Delivery
                                 </Button>
                               )}
+                              {['delivered', 'completed'].includes(order.status) && !order?.reviewed && (
+                                <Button size="sm" onClick={() => openReviewDialog(order)}>
+                                  <Star className="h-4 w-4 mr-2" />
+                                  Leave Review
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="sm" onClick={() => {
+                                const serial = order.serialNumber || order.verificationSerial || '';
+                                if (serial) {
+                                  window.location.href = `/verify/${encodeURIComponent(serial)}`;
+                                } else {
+                                  // Fallback: open product detail page
+                                  window.location.href = `/product/${order.productId}`;
+                                }
+                              }}>
+                                Verify Product
+                              </Button>
                               
                               {['paid', 'shipped'].includes(order.status) && (
                                 <Button
@@ -285,7 +354,20 @@ const BuyerDashboard = () => {
                                     <ExternalLink className="h-4 w-4 ml-2" />
                                   </a>
                                 </Button>
-                              )}
+                                )}
+                                {order.sellerEmail && (
+                                  <Button variant="outline" size="sm" asChild>
+                                    <a href={`mailto:${order.sellerEmail}`}>Contact Seller</a>
+                                  </Button>
+                                )}
+                                {order.sellerPhone && (
+                                  <Button variant="outline" size="sm" asChild>
+                                    <a href={`tel:${order.sellerPhone}`}>Call Seller</a>
+                                  </Button>
+                                )}
+                                {['completed', 'delivered'].includes(order.status) && (
+                                  <Button size="sm" onClick={() => handleBuyAgain(order)}>Buy Again</Button>
+                                )}
                             </div>
                           </div>
                         </div>
@@ -307,6 +389,32 @@ const BuyerDashboard = () => {
             </Tabs>
           </CardContent>
         </Card>
+        {/* Review Dialog */}
+        {reviewingOrder && (
+          <div className={`${reviewDialogOpen ? 'block' : 'hidden'} fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4`}> 
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-semibold mb-2">Leave a Review for {reviewingOrder.productName}</h3>
+              <div className="mb-3">
+                <label className="text-sm text-muted-foreground">Rating</label>
+                <div className="flex items-center gap-2 mt-2">
+                  {[1,2,3,4,5].map(r => (
+                    <button key={r} onClick={() => setReviewRating(r)} className={`p-2 rounded ${r <= reviewRating ? 'bg-yellow-400 text-white' : 'bg-gray-200'}`}>
+                      {r} ★
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="text-sm text-muted-foreground">Comment</label>
+                <textarea value={reviewComment} onChange={(e) => setReviewComment(e.target.value)} rows={4} className="w-full rounded border p-2 mt-1" />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => { setReviewDialogOpen(false); setReviewingOrder(null); }}>Cancel</Button>
+                <Button onClick={submitReview} disabled={isSubmittingReview}>{isSubmittingReview ? 'Submitting...' : 'Submit Review'}</Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

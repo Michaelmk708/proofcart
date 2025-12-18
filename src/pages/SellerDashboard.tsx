@@ -1,3 +1,4 @@
+// First SellerDashboard variant removed. Keeping the newer, more feature-rich implementation below.
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +12,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Package, DollarSign, TrendingUp, Plus, Shield } from 'lucide-react';
+import { Package, DollarSign, TrendingUp, Plus, Shield, ExternalLink } from 'lucide-react';
+import SellerTrustBadge from '@/components/SellerTrustBadge';
+import EscrowFlow from '@/components/EscrowFlow';
 import type { Product, Order } from '@/types';
 import { apiService } from '@/lib/api';
 import { plugWallet } from '@/lib/wallet/plug';
@@ -22,6 +25,8 @@ const SellerDashboard = () => {
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [showEscrowModal, setShowEscrowModal] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [stats, setStats] = useState({ totalSales: 0, revenue: 0, activeProducts: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -46,7 +51,7 @@ const SellerDashboard = () => {
       return;
     }
     fetchData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, navigate]);
 
   const fetchData = async () => {
     try {
@@ -65,6 +70,11 @@ const SellerDashboard = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const openEscrowModal = (order: Order) => {
+    setSelectedOrderId(order.orderId);
+    setShowEscrowModal(true);
   };
 
   const handleAddProduct = async () => {
@@ -121,8 +131,13 @@ const SellerDashboard = () => {
       });
       
       fetchData();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to add product');
+    } catch (error) {
+      let msg = 'Failed to add product';
+      if (typeof error === 'object' && error !== null) {
+        const e = error as { message?: string };
+        msg = e.message || msg;
+      }
+      toast.error(msg);
     } finally {
       setIsAddingProduct(false);
     }
@@ -165,6 +180,11 @@ const SellerDashboard = () => {
               Manage your products and orders
             </p>
           </div>
+          {user?.id && (
+            <div className="ml-4">
+              <SellerTrustBadge sellerId={user.id} size="sm" />
+            </div>
+          )}
           <Dialog>
             <DialogTrigger asChild>
               <Button size="lg">
@@ -408,6 +428,13 @@ const SellerDashboard = () => {
                               Mark as Shipped
                             </Button>
                           )}
+                          {order.escrowId && (
+                            <div className="mt-2">
+                              <Button size="sm" variant="outline" onClick={() => openEscrowModal(order)}>
+                                View Escrow
+                              </Button>
+                            </div>
+                          )}
                         </CardContent>
                       </Card>
                     ))}
@@ -418,6 +445,9 @@ const SellerDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+      {showEscrowModal && selectedOrderId && (
+        <EscrowFlow orderId={selectedOrderId} onClose={() => setShowEscrowModal(false)} />
+      )}
 
       <Footer />
     </div>

@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosError, AxiosRequestConfig } from 'axios';
 import { config } from './config';
 import type {
   User,
@@ -39,7 +39,7 @@ class ApiService {
     this.api.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
-        const originalRequest = error.config as any;
+        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
@@ -73,7 +73,8 @@ class ApiService {
 
   // Auth APIs
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const { data } = await this.api.post<any>('/auth/login/', credentials);
+    type AuthApiResponse = { tokens: { access: string; refresh: string }; user: User };
+    const { data } = await this.api.post<AuthApiResponse>('/auth/login/', credentials);
     localStorage.setItem('access_token', data.tokens.access);
     localStorage.setItem('refresh_token', data.tokens.refresh);
     return {
@@ -84,7 +85,8 @@ class ApiService {
   }
 
   async register(userData: RegisterData): Promise<AuthResponse> {
-    const { data } = await this.api.post<any>('/auth/register/', userData);
+    type AuthApiResponse = { tokens: { access: string; refresh: string }; user: User };
+    const { data } = await this.api.post<AuthApiResponse>('/auth/register/', userData);
     localStorage.setItem('access_token', data.tokens.access);
     localStorage.setItem('refresh_token', data.tokens.refresh);
     return {
@@ -125,7 +127,8 @@ class ApiService {
   async getProduct(id: string): Promise<Product> {
     const { data } = await this.api.get<Product>(`/products/${id}/`);
     console.log('📦 getProduct response:', data);
-    console.log('🔖 Serial number in response:', (data as any).serial_number);
+    const serialField = (data as unknown as Record<string, unknown>)['serial_number'];
+    console.log('🔖 Serial number in response:', serialField);
     return data;
   }
 
@@ -219,28 +222,24 @@ class ApiService {
     buyerAddress: string;
     sellerAddress: string;
     amount: number;
-  }): Promise<any> {
-    const { data } = await this.api.post('/escrow/create/', orderData);
+  }): Promise<Record<string, unknown>> {
+    const { data } = await this.api.post<Record<string, unknown>>('/escrow/create/', orderData);
     return data;
   }
 
-  async releaseEscrow(escrowId: string, transactionHash: string): Promise<any> {
-    const { data } = await this.api.post(`/escrow/${escrowId}/release/`, { transactionHash });
+  async releaseEscrow(escrowId: string, transactionHash: string): Promise<Record<string, unknown>> {
+    const { data } = await this.api.post<Record<string, unknown>>(`/escrow/${escrowId}/release/`, { transactionHash });
     return data;
   }
 
-  async lockEscrow(escrowId: string, reason: string): Promise<any> {
-    const { data } = await this.api.post(`/escrow/${escrowId}/lock/`, { reason });
+  async lockEscrow(escrowId: string, reason: string): Promise<Record<string, unknown>> {
+    const { data } = await this.api.post<Record<string, unknown>>(`/escrow/${escrowId}/lock/`, { reason });
     return data;
   }
 
   // NFT/Verification APIs
-  async mintNFT(nftData: {
-    productId: string;
-    serialNumber: string;
-    manufacturer: string;
-    metadataUri: string;
-  }): Promise<NFTMetadata> {
+  async mintNFT(nftData: Partial<NFTMetadata>): Promise<NFTMetadata> {
+    // nftData should match backend NFTMintSerializer schema
     const { data } = await this.api.post<NFTMetadata>('/nft/mint/', nftData);
     return data;
   }
@@ -254,14 +253,51 @@ class ApiService {
     }
   }
 
-  async getProductProvenance(serialNumber: string): Promise<any> {
-    const { data } = await this.api.get('/products/provenance/', {
+  async getProductProvenance(serialNumber: string): Promise<Record<string, unknown>> {
+    const { data } = await this.api.get<Record<string, unknown>>('/products/provenance/', {
       params: { serial_number: serialNumber }
     });
     return data;
   }
 
-  async verifyProduct(serialNumber: string): Promise<any> {
+  async getSellerTrustScore(sellerId: string): Promise<{ trust_score: number } | null> {
+    try {
+      const { data } = await this.api.get(`/sellers/${sellerId}/trust/`);
+      return data;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async getEscrowStatus(escrowId: string): Promise<Record<string, unknown> | null> {
+    try {
+      const { data } = await this.api.get<Record<string, unknown>>(`/escrow/${escrowId}/status/`);
+      return data;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async verifyProduct(serialNumber: string): Promise<Record<string, unknown> | { verified: false; message?: string; error?: boolean; errorType?: string }> {
+    const getErrInfo = (error: unknown) => {
+      if (typeof error === 'object' && error !== null) {
+        const e = error as { message?: string; response?: { status?: number; data?: unknown }; config?: unknown; code?: string };
+        const respData = e.response?.data;
+        let dataMessage: string | undefined;
+        if (typeof respData === 'object' && respData !== null && 'message' in respData && typeof (respData as { message?: unknown }).message === 'string') {
+          dataMessage = (respData as { message?: string }).message;
+        }
+        const message = dataMessage || e.message || 'Product not found';
+        return {
+          message,
+          status: e.response?.status,
+          data: e.response?.data,
+          code: e.code,
+        };
+      }
+      return { message: String(error) };
+    };
+
     try {
       console.log('🔍 Verifying product:', serialNumber);
       console.log('📍 API Base URL:', config.api.baseUrl);
@@ -272,26 +308,15 @@ class ApiService {
       
       console.log('✅ Verification response:', data);
       return data;
-    } catch (error: any) {
-      console.error('❌ Verification error:', {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        fullUrl: error.config?.baseURL + error.config?.url,
-        data: error.response?.data,
-        code: error.code,
-        isNetworkError: error.message === 'Network Error',
-        isCorsError: !error.response && error.request
-      });
-      
+    } catch (error) {
+      const info = getErrInfo(error);
+      console.error('❌ Verification error:', info);
       // Return false for any error (404, network, CORS, etc.)
-      return { 
-        verified: false, 
-        message: error.response?.data?.message || error.message || 'Product not found',
+      return {
+        verified: false,
+        message: info.message,
         error: true,
-        errorType: error.code || (error.response ? 'http' : 'network')
+        errorType: info.code || 'network',
       };
     }
   }
@@ -301,9 +326,15 @@ class ApiService {
     return data;
   }
 
+  // Reviews API
+  async submitProductReview(productId: string, reviewData: { rating: number; comment?: string; order_id?: string; }): Promise<Record<string, unknown>> {
+    const { data } = await this.api.post<Record<string, unknown>>(`/products/${productId}/reviews/`, reviewData);
+    return data;
+  }
+
   // Seller APIs
-  async getSellerStats(): Promise<any> {
-    const { data } = await this.api.get('/seller/stats/');
+  async getSellerStats(): Promise<Record<string, unknown>> {
+    const { data } = await this.api.get<Record<string, unknown>>('/seller/stats/');
     return data;
   }
 
@@ -323,8 +354,8 @@ class ApiService {
     return data;
   }
 
-  async resolveDispute(disputeId: string, resolution: string): Promise<any> {
-    const { data } = await this.api.post(`/admin/disputes/${disputeId}/resolve/`, { resolution });
+  async resolveDispute(disputeId: string, resolution: string): Promise<Record<string, unknown>> {
+    const { data } = await this.api.post<Record<string, unknown>>(`/admin/disputes/${disputeId}/resolve/`, { resolution });
     return data;
   }
 }

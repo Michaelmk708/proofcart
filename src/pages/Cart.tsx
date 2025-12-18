@@ -114,9 +114,10 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => {
                 const product = item.product;
-                const serialNumber = (product as any).serial_number || product.serialNumber;
-                const sellerName = (product as any).seller_username || product.sellerName || 'ProofCart Seller';
-                const isVerified = (product as any).verified || product.nftId;
+                const asRecord = product as unknown as Record<string, unknown>;
+                const serialNumber = (typeof asRecord['serial_number'] === 'string' && asRecord['serial_number'] as string) || product.serialNumber;
+                const sellerName = (typeof asRecord['seller_username'] === 'string' && asRecord['seller_username'] as string) || product.sellerName || 'ProofCart Seller';
+                const isVerified = Boolean(product.verified || product.nftId || serialNumber);
                 
                 return (
                   <Card key={item.productId} className="overflow-hidden">

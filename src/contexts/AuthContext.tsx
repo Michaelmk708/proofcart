@@ -41,6 +41,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(false);
   };
 
+  const getErrorMessage = (err: unknown) => {
+    if (typeof err === 'object' && err !== null) {
+      const e = err as { response?: { data?: { message?: string } }; message?: string };
+      return e.response?.data?.message || e.message || 'An error occurred';
+    }
+    return String(err);
+  };
+
   const login = async (credentials: LoginCredentials) => {
     try {
       const response = await apiService.login(credentials);
@@ -55,8 +63,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         navigate('/dashboard');
       }
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Login failed');
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg || 'Login failed');
       throw error;
     }
   };
@@ -67,8 +76,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(response.user);
       toast.success('Account created successfully!');
       navigate('/');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Registration failed');
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg || 'Registration failed');
       throw error;
     }
   };
@@ -100,8 +110,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const updatedUser = await apiService.updateUserProfile({ wallet_address: address });
         setUser(updatedUser);
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to connect wallet');
+    } catch (error) {
+      const msg = getErrorMessage(error);
+      toast.error(msg || 'Failed to connect wallet');
       throw error;
     }
   };
